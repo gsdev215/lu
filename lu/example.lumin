@@ -1,2 +1,6 @@
 print hello World
 print hi contributers
+Declare dev as int
+let dev be 20+2*70
+Declare test as str
+let test be hi
