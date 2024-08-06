@@ -4,10 +4,23 @@
 
 ## Features
 
-- **Tokenization**: Converts pseudocode into tokens for easier processing.
-- **Print Statement Conversion**: Translates pseudocode print statements into Python's `print()` function.
-- **Comment Handling**: Identifies and ignores comments in pseudocode.
+- **Tokenization**: Converts Lu code into tokens for easier processing.
+- **Print Statement Conversion**: Translates Lu print statements into Python's `print()` function.
+- **Comment Handling**: Identifies and preserves comments in Lu code.
+- **Variable Management**:
+  - **Declaration**: Supports explicit variable declaration with type specification.
+  - **Assignment**: Allows assigning values to declared variables.
+  - **Deletion**: Provides functionality to delete variables.
+- **Type Checking**: Implements basic type checking for variable assignments.
+- **Error Handling**: 
+  - Provides specific error types for different scenarios (syntax errors, type errors, etc.).
+  - Includes detailed error messages with line and column information.
+- **Logging System**: 
+  - Implements a robust logging system with different log levels.
+  - Provides colored console output for better readability.
+  - Includes file and line information in log messages for easy debugging.
 
+  
 ## Installation
 
 To set up Lu on your local machine, follow these steps:
