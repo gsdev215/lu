@@ -87,23 +87,3 @@ class Lexer:
 def tokenize_text(text: str) -> List[Token]:
     lexer = Lexer(text)
     return lexer.tokenize()
-
-# Example usage
-#if __name__ == "__main__":
-    sample_code = """
-    Declare x as int
-    let x = 5 + 3
-    
-    // This is a comment
-    Declare message as string
-    let message = "Hello, world!"
-    
-    print x
-    print message
-    
-    delete x
-    """
-    
-    """tokens = tokenize_text(sample_code)
-    for token in tokens:
-        print(token)"""
