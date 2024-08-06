@@ -18,15 +18,53 @@ To set up Lu on your local machine, follow these steps:
     ```
 
 
-## TODO
+# Lu Language Compiler TODO List
+
+## Completed Tasks
 
 - [x] Implement basic tokenization
 - [x] Handle `print` statements in pseudocode
 - [x] Add support for comment handling
+- [x] Implement variable declaration and assignment
+- [x] Add basic type checking for variables
+- [x] Implement variable deletion
+- [x] Create a basic error handling system
+- [x] Develop a logging system with colored output
+- [x] Add file and line information to error messages
+
+## In Progress
+
 - [ ] Improve error handling and reporting
-- [ ] Add support for additional pseudocode constructs (e.g., loops, conditionals)
-- [ ] Develop an interactive mode for real-time translation
+  - [ ] Add more specific error types for different scenarios
+  - [ ] Enhance error messages with code snippets
+- [ ] Implement Function definitions and calls
+
+## To Do
+
+- [ ] Add support for additional pseudocode constructs
+  - [ ] Implement if/else conditionals and support for loops (while, for)
+  - [ ] Add support for nested scopes and closures
+
+- [ ] Enhance type system
+  - [ ] Add support for custom data types and classes
+  - [ ] Implement type inference
+
+- [ ] Improve compiler architecture
+  - [ ] Implement an Abstract Syntax Tree (AST) for more robust parsing
+  - [ ] Develop a symbol table for better variable and function scope management
+
+- [ ] Enhance language features
+  - [ ] Add support for importing other Lu files
+  - [ ] Implement a standard library of built-in functions
+  - [ ] Add support for multi-line strings and string interpolation
+  - [ ] Implement async/await functionality
+  - [ ] Add support for decorators
+
 - [ ] Enhance documentation and provide usage examples
+  - [ ] Write comprehensive language specification
+  - [ ] Create tutorials and guides for Lu programming
+
+- [ ] Performance optimization
 
 ## Contributing
 
