@@ -8,7 +8,7 @@ def process_file(input_filename: str, output_filename: str):
         with open(input_filename, 'r', encoding='utf-8') as infile:
             text = infile.read()
         
-        info(f"Processing file: {input_filename}")
+        info(f"Processing file: {input_filename}") # will remove ,reason debugging purpose
         tokens = tokenize_text(text)
         lu_instance = Lu(tokens)
         py_tokens = lu_instance.compile()
@@ -16,7 +16,7 @@ def process_file(input_filename: str, output_filename: str):
         with open(output_filename, 'w', encoding='utf-8') as outfile:
             outfile.writelines(py_tokens)
         
-        info(f"Compilation successful. Output written to {output_filename}")
+        info(f"Compilation successful. Output written to {output_filename}") # will remove ,reason debugging purpose
     except Error as e:
         error(f"Compilation failed: {e.full_message}")
     except IOError as e:
