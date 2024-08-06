@@ -14,14 +14,14 @@ class Lu:
         self.function_manager = FunctionManager()
 
     def compile(self) -> List[str]:
-        info("Starting compilation process")
+        info("Starting compilation process") # will remove ,reason debugging purpose
         while self.current_token.type != 'EOF':
             try:
                 self.process_statement()
             except Error as e:
                 error(f"Error during compilation: {e.full_message}")
                 raise
-        info("Compilation process completed")
+        info("Compilation process completed")# will remove ,reason debugging purpose
         return self.pytokens
 
     def process_statement(self):
@@ -184,4 +184,4 @@ class Lu:
 
     def advance(self):
         self.current_index += 1
-        debug(f"Advanced to token: {self.current_token}")
+        debug(f"Advanced to token: {self.current_token}") # will remove ,reason debugging purpose
