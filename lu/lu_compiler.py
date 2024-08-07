@@ -45,6 +45,6 @@ def main():
 
 if __name__ == "__main__":
     #main()
-    input_file = 'lu/lu/example.lumin'
+    input_file = 'lu/lu/example.lu'
     output_file = 'output.py'
     process_file(input_file, output_file)
