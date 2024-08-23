@@ -18,7 +18,9 @@ class Lexer:
         tokens = []
         while self.pos < len(self.text):
             if token := self.match_whitespace():
-                pass  # Ignore whitespace, but update position
+                tokens.append(token)
+            elif token := self.match_space():
+                pass
             elif token := self.match_comment():
                 tokens.append(token)
             elif token := self.match_keyword():
@@ -49,13 +51,16 @@ class Lexer:
         return None
 
     def match_whitespace(self):
-        return self.match_pattern(r'\s+', 'WHITESPACE')
+        return self.match_pattern(r'[\t\n]+', 'WHITESPACE')
+
+    def match_space(self):
+        return self.match_pattern(r'[ ]+', 'SPACE')
 
     def match_comment(self):
         return self.match_pattern(r'//.*', 'COMMENT')
 
     def match_keyword(self):
-        keywords = r'\b(Declare|as|let|print|delete|del|if|else|while|for|function|return)\b'
+        keywords = r'\b(Declare|as|let|print|delete|del|if|else|while|for|func|return|pass|continue)\b'
         return self.match_pattern(keywords, 'KEYWORD')
 
     def match_identifier(self):
