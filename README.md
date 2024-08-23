@@ -30,6 +30,11 @@ To set up Lu on your local machine, follow these steps:
     git clone https://github.com/gsdev215/lu.git
     ```
 
+2. **Run the compiler**:
+    ```bash
+    python lu_compiler.py input.lu -o output.py -r
+    ```
+
 
 # Lu Language Compiler TODO List
 
