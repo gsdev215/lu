@@ -1,94 +1,61 @@
 import re
-from typing import List, NamedTuple
-
-class Token(NamedTuple):
-    type: str
-    value: str
-    line: int
-    column: int
+from lu_token import Token # Implementing AST
 
 class Lexer:
-    def __init__(self, text):
+    def __init__(self, text: str):
         self.text = text
         self.pos = 0
         self.line = 1
         self.column = 1
+        self.token_specs = [
+            ('WHITESPACE', r'[\t\n]+'),
+            ('COMMENT', r'//.*'),
+            ('KEYWORD', r'\b(Declare|as|let|print|delete|del|if|else|while|for|func|return|pass|continue|end)\b'),
+            ('IDENTIFIER', r'[a-zA-Z_]\w*'), 
+            ('ATTRIBUTE', r'\.[a-zA-Z_]\w*'), 
+            ('FUNCTION_CALL', r'\.[a-zA-Z_]\w*\(\)'), 
+            ('NUMBER', r'\d+(\.\d+)?'),
+            ('STRING', r'"[^"]*"'),
+            ('OPERATOR', r'(\+|->|-|\*|/|==|!=|<|>|<=|>=|=)'),
+            ('DELIMITER', r'[\(\)\[\]\{\},;:]'),
+            ('SPACE', r'[ ]+'),
+        ]
+        self.token_regex = '|'.join(f'(?P<{name}>{pattern})' for name, pattern in self.token_specs)
+        self.compiled_regex = re.compile(self.token_regex)
 
-    def tokenize(self) -> List[Token]:
+    def tokenize(self):
         tokens = []
-        while self.pos < len(self.text):
-            if token := self.match_whitespace():
-                tokens.append(token)
-            elif token := self.match_space():
-                pass
-            elif token := self.match_comment():
-                tokens.append(token)
-            elif token := self.match_keyword():
-                tokens.append(token)
-            elif token := self.match_identifier():
-                tokens.append(token)
-            elif token := self.match_number():
-                tokens.append(token)
-            elif token := self.match_string():
-                tokens.append(token)
-            elif token := self.match_operator():
-                tokens.append(token)
-            elif token := self.match_delimiter():
-                tokens.append(token)
+        for match in self.compiled_regex.finditer(self.text):
+            token_type = match.lastgroup
+            value = match.group(token_type)
+            if token_type in {'WHITESPACE', 'COMMENT', 'SPACE'}:
+                self.update_position(value)
+                continue
             else:
-                raise SyntaxError(f"Unexpected character at line {self.line}, column {self.column}")
-        
+                token = Token(token_type, value, self.line, self.column)
+                tokens.append(token)
+                self.update_position(value)
         tokens.append(Token('EOF', '', self.line, self.column))
         return tokens
 
-    def match_pattern(self, pattern, token_type):
-        match = re.match(pattern, self.text[self.pos:])
-        if match:
-            value = match.group()
-            token = Token(token_type, value, self.line, self.column)
-            self.advance(len(value))
-            return token
-        return None
+    def update_position(self, value: str):
+        """Update line and column positions after processing a token."""
+        newline_count = value.count('\n')
+        semicolon_count = value.count(';')
 
-    def match_whitespace(self):
-        return self.match_pattern(r'[\t\n]+', 'WHITESPACE')
+        # Increment line number for each newline and semicolon
+        self.line += newline_count + semicolon_count
 
-    def match_space(self):
-        return self.match_pattern(r'[ ]+', 'SPACE')
-
-    def match_comment(self):
-        return self.match_pattern(r'//.*', 'COMMENT')
-
-    def match_keyword(self):
-        keywords = r'\b(Declare|as|let|print|delete|del|if|else|while|for|func|return|pass|continue)\b'
-        return self.match_pattern(keywords, 'KEYWORD')
-
-    def match_identifier(self):
-        return self.match_pattern(r'[a-zA-Z_]\w*', 'IDENTIFIER')
-
-    def match_number(self):
-        return self.match_pattern(r'\d+(\.\d+)?', 'NUMBER')
-
-    def match_string(self):
-        return self.match_pattern(r'"[^"]*"', 'STRING')
-
-    def match_operator(self):
-        operators = r'(\+|-|\*|/|==|!=|<|>|<=|>=|=)'
-        return self.match_pattern(operators, 'OPERATOR')
-
-    def match_delimiter(self):
-        delimiters = r'[\(\)\[\]\{\},;:]'
-        return self.match_pattern(delimiters, 'DELIMITER')
-
-    def advance(self, length):
-        lines = self.text[self.pos:self.pos+length].split('\n')
-        if len(lines) > 1:
-            self.line += len(lines) - 1
-            self.column = len(lines[-1]) + 1
+        if newline_count > 0:
+            # If there are newlines, reset the column to the length after the last newline
+            self.column = len(value.rsplit('\n', 1)[-1]) + 1
         else:
-            self.column += length
-        self.pos += length
+            # If no newlines, just increment the column by the length of the value
+            self.column += len(value)
 
-def tokenize_text(text: str) -> List[Token]:
+        # Update the overall position in the text
+        self.pos += len(value)
+
+def tokenize_text(text: str):
     lexer = Lexer(text)
     return lexer.tokenize()
