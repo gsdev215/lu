@@ -1,5 +1,5 @@
 import re
-from lu_token import Token # Implementing AST
+from lu_token import Token
 
 class Lexer:
     def __init__(self, text: str):
@@ -10,13 +10,13 @@ class Lexer:
         self.token_specs = [
             ('WHITESPACE', r'[\t\n]+'),
             ('COMMENT', r'//.*'),
-            ('KEYWORD', r'\b(Declare|as|let|print|delete|del|if|else|while|for|func|return|pass|continue|end)\b'),
+            ('KEYWORD', r'\b(Declare|as|let|print|delete|del|if|else|while|for|func|return|pass|continue|END)\b'), # would replace with uppercase later!
             ('IDENTIFIER', r'[a-zA-Z_]\w*'), 
             ('ATTRIBUTE', r'\.[a-zA-Z_]\w*'), 
             ('FUNCTION_CALL', r'\.[a-zA-Z_]\w*\(\)'), 
             ('NUMBER', r'\d+(\.\d+)?'),
             ('STRING', r'"[^"]*"'),
-            ('OPERATOR', r'(\+|->|-|\*|/|==|!=|<|>|<=|>=|=)'),
+            ('OPERATOR', r'(\+|->|-|\*\*|\*|/|==|!=|<|>|<=|>=|=)'),
             ('DELIMITER', r'[\(\)\[\]\{\},;:]'),
             ('SPACE', r'[ ]+'),
         ]
