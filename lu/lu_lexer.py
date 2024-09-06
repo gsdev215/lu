@@ -9,17 +9,21 @@ class Lexer:
         self.column = 1
         self.token_specs = [
             ('WHITESPACE', r'[\t\n]+'),
-            ('COMMENT', r'//.*'),
-            ('KEYWORD', r'\b(Declare|as|let|print|delete|del|if|else|while|for|func|return|pass|continue|END)\b'), # would replace with uppercase later!
-            ('IDENTIFIER', r'[a-zA-Z_]\w*'), 
-            ('ATTRIBUTE', r'\.[a-zA-Z_]\w*'), 
-            ('FUNCTION_CALL', r'\.[a-zA-Z_]\w*\(\)'), 
-            ('NUMBER', r'\d+(\.\d+)?'),
-            ('STRING', r'"[^"]*"'),
-            ('OPERATOR', r'(\+|->|-|\*\*|\*|/|==|!=|<|>|<=|>=|=)'),
+            ('SPACE', r'[ ]+'),  # Spaces are handled separately
+            ('COMMENT', r'//.*'), 
+            ('KEYWORD', r'\b(INPUT|OUTPUT|PRINT|print|IF|THEN|ELSE|ENDIF|WHILE|ENDWHILE|FOR|TO|STEP|NEXT|FUNCTION|ENDFUNCTION|RETURN|CALL|DECLARE|CONSTANT|TRUE|FALSE)\b'),  # Keywords and Boolean values
+            ('IDENTIFIER', r'[a-zA-Z_]\w*'),
+            ('ATTRIBUTE', r'\.[a-zA-Z_]\w*'),  # Attributes starting with a dot
+            ('FUNCTION_CALL', r'[a-zA-Z_]\w*\(\)'),  # Function calls with parentheses
+            ('CHAR', r"'.'"),  # Single character enclosed in single quotes
+            ('STRING', r'"[^"]*"'),  # Zero or more characters enclosed in double quotes
+            ('INTEGER', r'\b\d+\b'),  
+            ('REAL', r'\b\d+\.\d+\b'),  # Numbers with decimal points
+            ('BOOLEAN', r'\b(TRUE|FALSE)\b'),
+            ('OPERATOR', r'(<-|->|\+|-|\*{1,2}|/|\^|=|<>|<|<=|>|>=)'),  # Operators: including `^` (power) and `<>` (not equal)
             ('DELIMITER', r'[\(\)\[\]\{\},;:]'),
-            ('SPACE', r'[ ]+'),
-        ]
+        ] # you should agree AI are sometimes really usefull 
+
         self.token_regex = '|'.join(f'(?P<{name}>{pattern})' for name, pattern in self.token_specs)
         self.compiled_regex = re.compile(self.token_regex)
 
@@ -28,7 +32,7 @@ class Lexer:
         for match in self.compiled_regex.finditer(self.text):
             token_type = match.lastgroup
             value = match.group(token_type)
-            if token_type in {'WHITESPACE', 'COMMENT', 'SPACE'}:
+            if token_type in {'COMMENT', 'SPACE'}:
                 self.update_position(value)
                 continue
             else:
@@ -47,13 +51,9 @@ class Lexer:
         self.line += newline_count + semicolon_count
 
         if newline_count > 0:
-            # If there are newlines, reset the column to the length after the last newline
             self.column = len(value.rsplit('\n', 1)[-1]) + 1
         else:
-            # If no newlines, just increment the column by the length of the value
             self.column += len(value)
-
-        # Update the overall position in the text
         self.pos += len(value)
 
 def tokenize_text(text: str):
