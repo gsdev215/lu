@@ -11,6 +11,18 @@ class Parser:
         self.indent = 0
         self.statements = []
 
+    def parse_statement(self) -> ast.AST:
+        """Parse a single statement."""
+        if self.match('KEYWORD'):
+            return self.keywords()
+        elif self.match('IDENTIFIER'):
+            return self.assignment()
+        
+        else:
+            # Handle other types of statements (e.g., expressions)
+            expr = self.get_exp()[0]
+            return ast.Expr(value=expr)
+
     def peek(self) -> Token:
         """Returns the current token that is being parsed."""
         return self.tokens[self.current]
@@ -23,18 +35,70 @@ class Parser:
 
     def advance(self) -> Token:
         """Increment/Consumes current token index and return the previous token."""
-        if self.is_at_end():
+        if self.is_at_file_end():
             return self.peek()
         self.current += 1
         return self.tokens[self.current - 1]
 
-    def is_at_end(self, n: int = None) -> bool:
+    def is_at_file_end(self, n: int = None) -> bool:
         """Checks for End Of File"""
         return self.peek().type == 'EOF' if n is None else self.peek_relative(n).type == 'EOF'
+    
+    def is_at_line_end(self, n: int = None) -> bool:
+        """Checks if the current token or the token `n` positions ahead is a newline."""
+        token = self.peek_relative(n) if n is not None else self.peek()
+        return token.type == 'WHITESPACE' and token.value == '\n'
+    
 
-    def keywords(self):
-        # TODO: Implement keyword handling
-        pass
+    def assignment(self) -> ast.AST:
+        var_name = self.advance().value
+        if self.advance().value not in ('<-', '='):
+            raise SyntaxError("Expected '<-' or '=' in assignment")
+
+        args, keywords = self.get_exp()
+        
+        if keywords:
+            raise SyntaxError("Invalid syntax. Keyword arguments not allowed in assignment.")
+        
+        if len(args) == 1:
+            value = args[0]
+        elif len(args) > 1:
+            value = ast.Tuple(elts=args, ctx=ast.Load())
+        else:
+            raise SyntaxError("No value provided for assignment")
+
+        expr = ast.Assign(
+            targets=[ast.Name(id=var_name, ctx=ast.Store())],
+            value=value
+        )
+        self.statements.append(expr)
+
+
+    def keywords(self) -> ast.AST:
+        keyword = self.advance().value
+        if keyword == 'INPUT':
+            return self.input_handling()
+        elif keyword in ('OUTPUT', 'PRINT', 'print'):
+            return self.print_handling()
+        elif keyword == 'IF':
+            return self.if_handling()
+        elif keyword == 'WHILE':
+            return self.while_handling()
+        elif keyword == 'FOR':
+            return self.for_handling()
+        elif keyword == 'FUNCTION':
+            return self.function_handling()
+        elif keyword == 'RETURN':
+            return self.return_handling()
+        elif keyword == 'CALL':
+            return self.call_handling()
+        elif keyword == 'DECLARE':
+            return self.declare_handling()
+        elif keyword == 'CONSTANT':
+            return self.constant_handling()
+        else:
+            raise SyntaxError(f"Unexpected keyword: {keyword}")
+
 
     def match(self, *types) -> bool:
         """Check if the current token matches any of the given types."""
@@ -49,23 +113,34 @@ class Parser:
         keywords = []
         expect_closing_paren = False
 
-        # Check if the expression starts with an '('
+        if self.match('KEYWORD'):
+            self.advance()
         if self.peek().value == '(':
             self.advance()
             expect_closing_paren = True
 
-        while not self.is_at_end():
+        while not (self.is_at_line_end() or self.is_at_file_end()):
             # Handle keywords
             if self.match('IDENTIFIER') and self.peek_relative(1).type == 'OPERATOR' and self.peek_relative(1).value == '=':
                 keyword_name = self.advance().value
                 self.advance()  
                 keyword_value = self.get_term()
                 keywords.append(ast.keyword(arg=keyword_name, value=keyword_value))
+            elif self.match('DELIMITER') and not self.peek_relative(-1).type == 'KEYWORD':
+                delim = self.advance()
+                if delim.value == ',':
+                    continue
+                elif delim.value == ')':
+                    if expect_closing_paren:
+                        break
+                    else:
+                        raise SyntaxError("Unexpected closing parenthesis")
+
             else:
                 expr = self.get_term()
 
                 # Handle operations
-                while self.match('OPERATOR') and not self.is_at_end():
+                while self.match('OPERATOR') and not self.is_at_line_end():
                     op = self.advance()
                     right = self.get_term()
 
@@ -89,34 +164,24 @@ class Parser:
                     else:
                         raise SyntaxError(f"Unexpected operator: {op.value}")
 
+            if expr: # to prevent duplication due to keywords
                 args.append(expr)
-
-            # Check for delimiter
-            if self.match('DELIMITER'):
-                delim = self.advance()
-                if delim.value == ',':
-                    continue
-                elif delim.value == ')':
-                    if expect_closing_paren:
-                        break
-                    else:
-                        raise SyntaxError("Unexpected closing parenthesis")
-                else:
-                    raise SyntaxError(f"Unexpected delimiter: {delim.value}")
-            else:
-                break
+                expr = None
+            
 
         if expect_closing_paren and self.peek().value != ')':
             raise SyntaxError("Expected closing parenthesis")
-
         return args, keywords
 
     def get_term(self) -> ast.AST:
         if self.match("STRING"):
             return ast.Constant(value=self.advance().value.strip('"'))
-        elif self.match("NUMBER"):
+        elif self.match("INTEGER"):
             value = self.advance().value
-            return ast.Constant(value=float(value) if '.' in value else int(value))
+            return ast.Constant(value=int(value))
+        elif self.match("REAL"):
+            value = self.advance().value
+            return ast.Constant(value=float(value))
         elif self.match('IDENTIFIER'):
             return ast.Name(id=self.advance().value, ctx=ast.Load())
         elif self.match('OPERATOR') and self.peek().value in ('-', 'not'):
@@ -149,7 +214,6 @@ class Parser:
         }[op]
 
     def print_handling(self):
-        self.advance()  # Advance past 'print'
         args, keywords = self.get_exp()
         if not args:
             raise Error(f"Expected expression after 'print' at line {self.peek().line}")
@@ -161,6 +225,16 @@ class Parser:
             )
         ))
 
-def parse(tokens):
-    #TODO
-    pass
+def parse(tokens: List[Token]) -> ast.Module:
+    """
+    Parse tokens using parallel processing for large inputs,
+    fall back to single-threaded parsing for small inputs.
+    """
+    if len(tokens) > 1000:  # Arbitrary threshold, adjust as needed
+        return parse(tokens)
+    else:
+        parser = Parser(tokens)
+        statements = []
+        while not parser.is_at_file_end():
+            statements.append(parser.parse_statement())
+        return ast.Module(body=parser.statements, type_ignores=[])
