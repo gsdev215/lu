@@ -9,7 +9,6 @@ class Parser:
         self.tokens = tokens
         self.current = 0
         self.indent = 0
-        self.statements = []
 
     def parse_statement(self) -> ast.AST:
         """Parse a single statement."""
@@ -45,7 +44,8 @@ class Parser:
         return self.peek().type == 'EOF' if n is None else self.peek_relative(n).type == 'EOF'
     
     def is_at_line_end(self, n: int = None) -> bool:
-        """Checks if the current token or the token `n` positions ahead is a newline."""
+        """Checks if the current token or the token `n` positions ahead is a newline.
+        """
         token = self.peek_relative(n) if n is not None else self.peek()
         return token.type == 'WHITESPACE' and token.value == '\n'
     
@@ -67,12 +67,10 @@ class Parser:
         else:
             raise SyntaxError("No value provided for assignment")
 
-        expr = ast.Assign(
+        return ast.Assign(
             targets=[ast.Name(id=var_name, ctx=ast.Store())],
             value=value
         )
-        self.statements.append(expr)
-
 
     def keywords(self) -> ast.AST:
         keyword = self.advance().value
@@ -96,6 +94,8 @@ class Parser:
             return self.declare_handling()
         elif keyword == 'CONSTANT':
             return self.constant_handling()
+        elif keyword == 'ENDIF':
+            pass
         else:
             raise SyntaxError(f"Unexpected keyword: {keyword}")
 
@@ -213,17 +213,22 @@ class Parser:
             '**': ast.Pow()
         }[op]
 
-    def print_handling(self):
+    def print_handling(self) -> ast.AST:
         args, keywords = self.get_exp()
         if not args:
             raise Error(f"Expected expression after 'print' at line {self.peek().line}")
-        self.statements.append(ast.Expr(
+        return ast.Expr(
             value=ast.Call(
                 func=ast.Name(id='print', ctx=ast.Load()),
                 args=args,
                 keywords=keywords
             )
-        ))
+        )
+    
+    def if_handling(self) -> ast.AST:
+        
+        #TODO ,built diffrent get_exp() for condition and loop based keywords
+        pass
 
 def parse(tokens: List[Token]) -> ast.Module:
     """
@@ -237,4 +242,6 @@ def parse(tokens: List[Token]) -> ast.Module:
         statements = []
         while not parser.is_at_file_end():
             statements.append(parser.parse_statement())
-        return ast.Module(body=parser.statements, type_ignores=[])
+            if parser.is_at_line_end():
+                parser.advance()
+        return ast.Module(body=statements, type_ignores=[])
