@@ -54,12 +54,9 @@ class Parser:
         var_name = self.advance().value
         if self.advance().value not in ('<-', '='):
             raise SyntaxError("Expected '<-' or '=' in assignment")
-
         args, keywords = self.get_exp()
-        
         if keywords:
             raise SyntaxError("Invalid syntax. Keyword arguments not allowed in assignment.")
-        
         if len(args) == 1:
             value = args[0]
         elif len(args) > 1:
@@ -108,7 +105,10 @@ class Parser:
         return False
 
 
-    def get_exp(self) -> Tuple[List[ast.AST], List[ast.keyword]]:
+    def get_exp(self, till_types: Optional[List[str]] = None) -> Tuple[List[ast.AST], List[ast.keyword]]:
+        if till_types is None:
+            till_types = []
+
         args = []
         keywords = []
         expect_closing_paren = False
@@ -121,9 +121,11 @@ class Parser:
 
         while not (self.is_at_line_end() or self.is_at_file_end()):
             # Handle keywords
-            if self.match('IDENTIFIER') and self.peek_relative(1).type == 'OPERATOR' and self.peek_relative(1).value == '=':
+            if self.peek().type in till_types:
+                break
+            if self.match('IDENTIFIER') and self.peek_relative(1).type == 'OPERATOR' and self.peek_relative(1).value in ('=', '<-', '←'):
                 keyword_name = self.advance().value
-                self.advance()  
+                self.advance()
                 keyword_value = self.get_term()
                 keywords.append(ast.keyword(arg=keyword_name, value=keyword_value))
             elif self.match('DELIMITER') and not self.peek_relative(-1).type == 'KEYWORD':
@@ -164,17 +166,17 @@ class Parser:
                     else:
                         raise SyntaxError(f"Unexpected operator: {op.value}")
 
-            if expr: # to prevent duplication due to keywords
-                args.append(expr)
-                expr = None
-            
+                if expr:  # to prevent duplication due to keywords
+                    args.append(expr)
+                    expr = None
 
         if expect_closing_paren and self.peek().value != ')':
             raise SyntaxError("Expected closing parenthesis")
+            
         return args, keywords
 
     def get_term(self) -> ast.AST:
-        if self.match("STRING"):
+        if self.match("STRING","CHAR"):
             return ast.Constant(value=self.advance().value.strip('"'))
         elif self.match("INTEGER"):
             value = self.advance().value
