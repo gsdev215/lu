@@ -9,20 +9,21 @@ class Lexer:
         self.column = 1
         self.token_specs = [
             ('WHITESPACE', r'[\t\n]+'),
-            ('SPACE', r'[ ]+'),  # Spaces are handled separately
-            ('COMMENT', r'//.*'), 
-            ('KEYWORD', r'\b(INPUT|OUTPUT|PRINT|print|IF|THEN|ELSE|ENDIF|WHILE|ENDWHILE|FOR|TO|STEP|NEXT|FUNCTION|ENDFUNCTION|RETURN|CALL|DECLARE|CONSTANT|TRUE|FALSE)\b'),  # Keywords and Boolean values
-            ('IDENTIFIER', r'[a-zA-Z_]\w*'),
+            ('SPACE', r'[ ]+'),
+            ('COMMENT', r'//.*'),  # Comment 
+            ('BOOLEAN', r'\b(TRUE|FALSE)\b'),
+            ('BOOLEANOP', r'\b(OR|AND)\b'), 
+            ('KEYWORD', r'\b(INPUT|OUTPUT|PRINT|print|IF|THEN|ELSE|ENDIF|WHILE|ENDWHILE|FOR|TO|STEP|NEXT|FUNCTION|ENDFUNCTION|RETURN|CALL|DECLARE|CONSTANT|TRUE|FALSE)\b'),
+            ('IDENTIFIER', r'[a-zA-Z_]\w*'),  # Identifiers starting with a letter or underscore
             ('ATTRIBUTE', r'\.[a-zA-Z_]\w*'),  # Attributes starting with a dot
             ('FUNCTION_CALL', r'[a-zA-Z_]\w*\(\)'),  # Function calls with parentheses
             ('CHAR', r"'.'"),  # Single character enclosed in single quotes
             ('STRING', r'"[^"]*"'),  # Zero or more characters enclosed in double quotes
-            ('INTEGER', r'\b\d+\b'),  
-            ('REAL', r'\b\d+\.\d+\b'),  # Numbers with decimal points
-            ('BOOLEAN', r'\b(TRUE|FALSE)\b'),
-            ('OPERATOR', r'(<-|->|\+|-|\*{1,2}|/|\^|=|<>|<|<=|>|>=)'),  # Operators: including `^` (power) and `<>` (not equal)
+            ('INTEGER', r'\b\d+\b'), 
+            ('REAL', r'\b\d+\.\d+\b'), 
+            ('OPERATOR', r'(<-|←|->|==|\+|-|\*{1,2}|/|\^|=|<>|<|<=|>|>=)'),  # Operators: including `^` (power) and `<>` (not equal)
             ('DELIMITER', r'[\(\)\[\]\{\},;:]'),
-        ] # you should agree AI are sometimes really usefull 
+        ] # you should agree AI are sometimes really handy 
 
         self.token_regex = '|'.join(f'(?P<{name}>{pattern})' for name, pattern in self.token_specs)
         self.compiled_regex = re.compile(self.token_regex)
