@@ -8,22 +8,38 @@ class Lexer:
         self.line = 1
         self.column = 1
         self.token_specs = [
-            ('WHITESPACE', r'[\t\n]+'),
-            ('SPACE', r'[ ]+'),
-            ('COMMENT', r'//.*'),  # Comment 
-            ('BOOLEAN', r'\b(TRUE|FALSE)\b'),
-            ('BOOLEANOP', r'\b(OR|AND)\b'), 
-            ('KEYWORD', r'\b(INPUT|OUTPUT|PRINT|print|IF|THEN|ELSE|ENDIF|WHILE|ENDWHILE|FOR|TO|STEP|NEXT|FUNCTION|ENDFUNCTION|RETURN|CALL|DECLARE|CONSTANT|TRUE|FALSE)\b'),
-            ('IDENTIFIER', r'[a-zA-Z_]\w*'),  # Identifiers starting with a letter or underscore
-            ('ATTRIBUTE', r'\.[a-zA-Z_]\w*'),  # Attributes starting with a dot
-            ('FUNCTION_CALL', r'[a-zA-Z_]\w*\(\)'),  # Function calls with parentheses
-            ('CHAR', r"'.'"),  # Single character enclosed in single quotes
-            ('STRING', r'"[^"]*"'),  # Zero or more characters enclosed in double quotes
-            ('INTEGER', r'\b\d+\b'), 
-            ('REAL', r'\b\d+\.\d+\b'), 
-            ('OPERATOR', r'(<-|←|->|==|\+|-|\*{1,2}|/|\^|=|<>|<|<=|>|>=)'),  # Operators: including `^` (power) and `<>` (not equal)
-            ('DELIMITER', r'[\(\)\[\]\{\},;:]'),
-        ] # you should agree AI are sometimes really handy 
+            # Whitespace and Comments
+            ('WHITESPACE', r'[\t\n]+'),  # Matches tabs and newlines
+            ('SPACE', r'[ ]+'),          # Matches spaces
+            ('COMMENT', r'//.*'),        # Single-line comments starting with //
+
+            # Boolean and Logical Operators
+            ('BOOLEAN', r'\b(TRUE|FALSE)\b'),  # Boolean literals TRUE, FALSE
+            ('BOOLEANOP', r'\b(NOT OR|NOT AND|OR|AND|NOT)\b'),  # Logical operators AND, OR, NOT
+
+            # Keywords
+            ('KEYWORD', r'\b(INPUT|OUTPUT|PRINT|IF|THEN|ELSE|ENDIF|WHILE|ENDWHILE|FOR|TO|STEP|NEXT|FUNCTION|ENDFUNCTION|RETURN|CALL|DECLARE|CONSTANT|LET|DO|REPEAT|UNTIL|CASE|ENDCASE|SWITCH|ENDSWITCH|TRUE|FALSE)\b'),
+
+            # Identifiers and Functions
+            ('FUNCTION_CALL', r"\b[A-Za-z_][A-Za-z0-9_]*\s*\(\s*((([A-Za-z_][A-Za-z0-9_]*|\".*?\"|'.*?'|\d+(\.\d+)?|\[.*?\]|\{.*?\}|\(.*?\))\s*(,\s*)?)*)\s*\)"),  # Function calls with parentheses (e.g., myFunction())
+            ('IDENTIFIER', r'[a-zA-Z_]\w*'),  # Variable/function names (alphanumeric and underscores)
+            ('ATTRIBUTE', r'\.[a-zA-Z_]\w*'),  # Attributes starting with a dot (e.g., object.property)
+
+            # Character and String Literals
+            ('CHAR', r"'.'"),  # Single characters enclosed in single quotes
+            ('STRING', r'"[^"]*"'),  # Strings enclosed in double quotes
+
+            # Numeric Literals
+            ('INTEGER', r'\b\d+\b'),  # Integer literals (whole numbers)
+            ('REAL', r'\b\d+\.\d+\b'),  # Real (floating point) numbers
+
+            # Operators (Arithmetic, Assignment, Comparison, and Bitwise)
+            ('OPERATOR', r'(<-|←|->|==|\+|-|\*{1,2}|/|\^|=|<>|<|<=|>|>=|%|&|\||\^|~|<<|>>)'),  # All operators
+
+            # Delimiters
+            ('DELIMITER', r'[\(\)\[\]\{\},;:]'),  # Parentheses, brackets, commas, etc.
+        ]
+
 
         self.token_regex = '|'.join(f'(?P<{name}>{pattern})' for name, pattern in self.token_specs)
         self.compiled_regex = re.compile(self.token_regex)
