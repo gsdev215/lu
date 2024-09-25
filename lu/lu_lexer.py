@@ -14,30 +14,29 @@ class Lexer:
             ('COMMENT', r'//.*'),        # Single-line comments starting with //
 
             # Boolean and Logical Operators
-            ('BOOLEAN', r'\b(TRUE|FALSE)\b'),  # Boolean literals TRUE, FALSE
+            ('BOOLEAN', r'\b(TRUE|FALSE)\b'),                   # Boolean literals TRUE, FALSE
             ('BOOLEANOP', r'\b(NOT OR|NOT AND|OR|AND|NOT)\b'),  # Logical operators AND, OR, NOT
 
             # Keywords
             ('KEYWORD', r'\b(INPUT|OUTPUT|PRINT|IF|THEN|ELSE|ENDIF|WHILE|ENDWHILE|FOR|TO|STEP|NEXT|FUNCTION|ENDFUNCTION|RETURN|CALL|DECLARE|CONSTANT|LET|DO|REPEAT|UNTIL|CASE|ENDCASE|SWITCH|ENDSWITCH|TRUE|FALSE)\b'),
 
             # Identifiers and Functions
-            ('FUNCTION_CALL', r"\b[A-Za-z_][A-Za-z0-9_]*\s*\(\s*((([A-Za-z_][A-Za-z0-9_]*|\".*?\"|'.*?'|\d+(\.\d+)?|\[.*?\]|\{.*?\}|\(.*?\))\s*(,\s*)?)*)\s*\)"),  # Function calls with parentheses (e.g., myFunction())
-            ('IDENTIFIER', r'[a-zA-Z_]\w*'),  # Variable/function names (alphanumeric and underscores)
+            ('IDENTIFIER', r'[a-zA-Z_]\w*'),   # Variable/function names (alphanumeric and underscores)
             ('ATTRIBUTE', r'\.[a-zA-Z_]\w*'),  # Attributes starting with a dot (e.g., object.property)
 
             # Character and String Literals
-            ('CHAR', r"'.'"),  # Single characters enclosed in single quotes
-            ('STRING', r'"[^"]*"'),  # Strings enclosed in double quotes
+            ('CHAR', r"'.'"),                  # Single characters enclosed in single quotes
+            ('STRING', r'"[^"]*"'),            # Strings enclosed in double quotes
 
             # Numeric Literals
-            ('INTEGER', r'\b\d+\b'),  # Integer literals (whole numbers)
-            ('REAL', r'\b\d+\.\d+\b'),  # Real (floating point) numbers
+            ('INTEGER', r'\b\d+\b'),           # Integer literals (whole numbers)
+            ('REAL', r'\b\d+\.\d+\b'),         # Real (floating point) numbers
 
             # Operators (Arithmetic, Assignment, Comparison, and Bitwise)
             ('OPERATOR', r'(<-|←|->|==|\+|-|\*{1,2}|/|\^|=|<>|<|<=|>|>=|%|&|\||\^|~|<<|>>)'),  # All operators
 
             # Delimiters
-            ('DELIMITER', r'[\(\)\[\]\{\},;:]'),  # Parentheses, brackets, commas, etc.
+            ('DELIMITER', r'[\(\)\[\]\{\},;:]'),        # Parentheses, brackets, commas, etc.
         ]
 
 

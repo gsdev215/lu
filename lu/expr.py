@@ -1,67 +1,73 @@
-import ast
-from typing import Tuple , Optional , List
+from typing import Tuple, Optional, List
 from lu_errors import SyntaxError
 
-class expr:
+class Expr:
 
-    def parse_function_call(self):
-        """Parses a function call."""
-        func_name = self.advance().value  # Consume the function name
-        try:
-            return ast.parse(f"{func_name}").body
-        except Exception as e:
-            SyntaxError(f"Invalid function call syntax: {e}")
-
-    def parse_print(self):
-        """Parses a print statement."""
-        value = self.advance().value  # Consume print/PRINT/OUTPUT
+    def parse_print(self) -> str:
+        """Parses a print statement and returns the print statement as a string."""
+        self.advance()  # Consume print/PRINT/OUTPUT
         print_args = self.collect_arguments()
-        value = f"print({print_args})"
+        print(print_args)
+        return f"print({print_args})"
 
-        try:
-            return ast.parse(value).body
-        except Exception as e:
-            SyntaxError(f"Error in parsing print statement: {e}")
-
-    def parse_identifier(self):
-        """Parses identifiers and function calls starting with an identifier."""
+    def parse_identifier(self) -> str:
+        """Parses identifiers, function calls, and variable assignments."""
         identifier = self.advance().value  # Consume the identifier
-        if self.peek().value == "(":
-            args = self.collect_arguments()
-            try:
-                return ast.parse(f"{identifier}({args})").body
-            except Exception as e:
-                SyntaxError(f"Error in function call for '{identifier}': {e}")
-        else:
-            return ast.parse(identifier).body
 
-    def parse_attribute(self):
+        if self.peek().value == "(":  # Function call
+            args = self.collect_arguments()
+            return f"{identifier}({args})"
+        elif self.peek().value in ("<-", "="):
+            self.advance()  # Consume the assignment operator
+            value_expr = self.get_expr()
+            return f"{identifier} = {value_expr}"
+        elif self.peek().type == 'ATTRIBUTE': 
+            return identifier+self.parse_attribute()
+        else:
+            return identifier
+
+    def parse_attribute(self) -> str:
         """Parses attribute access and method calls on objects."""
-        attribute_chain = self.advance().value  # Start with the first attribute
+        attribute_chain = self.advance().value  # Consume the first part of the attribute chain
 
-        while self.peek().type == 'ATTRIBUTE':
-            attribute_chain += self.advance().value  # Consume the next part of the attribute chain
+        while self.peek().type == 'ATTRIBUTE':  # Continue parsing the attribute chain
+            attribute_chain += self.advance().value
 
-        if self.peek().value == "(":
+        if self.peek().value == "(":  
             args = self.collect_arguments()
-            try:
-                return ast.parse(f"{attribute_chain}({args})").body
-            except Exception as e:
-                SyntaxError(f"Error in method call '{attribute_chain}': {e}")
+            return f"{attribute_chain}({args})"
         else:
-            try:
-                return ast.parse(attribute_chain).body
-            except Exception as e:
-                SyntaxError(f"Error in attribute access '{attribute_chain}': {e}")
+            return attribute_chain
 
     def collect_arguments(self) -> str:
         """Collects and returns function/method arguments as a string."""
         args = []
+        paren_count = 1
         self.advance()  # Skip the opening parenthesis
-        while self.peek().value != ")":
-            if self.is_at_line_end() or self.is_at_file_end():
-                SyntaxError("Function call does not have closing parenthesis")
-                return
-            args.append(self.advance().value)
+
+        while paren_count > 0:
+            if self.is_at_file_end():
+                raise SyntaxError("Unexpected end of file: Function call does not have a closing parenthesis")
+            
+            if self.is_at_line_end():
+                args.append('\n')
+                self.advance()
+                continue
+
+            current_token = self.peek()
+            
+            if current_token.value == '(':
+                paren_count += 1
+            elif current_token.value == ')':
+                paren_count -= 1
+                if paren_count == 0:
+                    break  # Don't include the final closing parenthesis
+
+            args.append(current_token.value)
+            self.advance()
+
+        if paren_count > 0:
+            raise SyntaxError("Function call does not have a closing parenthesis")
+
         self.advance()  # Skip the closing parenthesis
-        return ''.join(args)
+        return ''.join(args).strip()

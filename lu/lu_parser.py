@@ -2,10 +2,10 @@ from typing import List, Any, Optional , Tuple
 from lu_token import Token
 import ast
 from lu_errors import SyntaxError, Error
-from expr import expr
+from expr import Expr
 
 
-class Parser(expr):
+class Parser(Expr):
     def __init__(self, tokens: List[Token]) -> None:
         self.tokens = tokens
         self.current = 0
@@ -13,7 +13,7 @@ class Parser(expr):
 
     def parse_statement(self) -> ast.AST:
         """Parse a single statement."""
-        return self.get_expr()
+        return ast.parse(self.get_expr()).body
 
     def peek(self) -> Token:
         """Returns the current token that is being parsed."""
@@ -43,16 +43,13 @@ class Parser(expr):
         return token.value == '\n'
     
 
-    def get_expr(self, till_types: Optional[List[str]] = None) -> Tuple[List[ast.AST], List[ast.keyword]]:
+    def get_expr(self, till_types: Optional[List[str]] = None) -> str:
         if till_types is None:
             till_types = []
 
         token_type = self.peek().type
 
-        if token_type == 'FUNCTION_CALL':
-            return self.parse_function_call()
-
-        elif self.peek().value in ('print', 'PRINT', 'OUTPUT'):
+        if self.peek().value in ('print', 'PRINT', 'OUTPUT'):
             return self.parse_print()
 
         elif token_type == 'IDENTIFIER':
