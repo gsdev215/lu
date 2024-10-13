@@ -1,14 +1,7 @@
 print "hello World"
 print "hi contributers"
-Declare dev as int
-let dev = 20+2*70
+
+dev <- 20+2*70
 // test is decleared below
-func add(x:int,y:int) -> int
-    if x == y
-        return x * 2
-    return x + y
 
-Declare test as str
-let test = "hi"
-
-print add(1,2)
+print sum(1,2)
