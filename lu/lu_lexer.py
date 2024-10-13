@@ -9,7 +9,8 @@ class Lexer:
         self.column = 1
         self.token_specs = [
             # Whitespace and Comments
-            ('WHITESPACE', r'[\t\n]+'),  # Matches tabs and newlines
+            ('TAB', r'\t+'),                # Matches individual tabs
+            ('WHITESPACE', r'\n+'),            # Matches individual newlines  # Matches tabs and newlines
             ('SPACE', r'[ ]+'),          # Matches spaces
             ('COMMENT', r'//.*'),        # Single-line comments starting with //
 

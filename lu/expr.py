@@ -2,45 +2,73 @@ from typing import Tuple, Optional, List
 from lu_errors import SyntaxError
 
 class Expr:
+    def parse_conditions(self) -> str:
+        x = self.advance().value.lower()  # Consume IF
+        args = ('    ' * self.indent) + x + ' '
+        indent_level = self.indent
+        condition = []
+
+        while not self.is_at_line_end() and self.indent >= indent_level:
+            while not self.is_at_line_end():
+                condition.append(self.advance().value)
+            else:
+                self.calculate_indentation()
+
+        args += ''.join(condition) + ':\n'
+        self.advance()
+
+        block = []
+        self.indent += 1
+        while self.indent > indent_level:
+            expr = self.get_expr()
+            if expr is None:
+                SyntaxError("Unexpected token or empty expression in the block.")
+            elif expr == '':
+                self.indent -= 1
+                return args + ''.join(block)
+            block.append(('    ' * self.indent) + expr + '\n')
+            self.calculate_indentation()
+            if self.is_at_line_end():
+                self.advance()
+            if self.is_at_file_end():
+                raise SyntaxError("Unexpected end of file, missing 'ENDIF'.")
+
+        return args + ''.join(block)
 
     def parse_print(self) -> str:
-        """Parses a print statement and returns the print statement as a string."""
-        self.advance()  # Consume print/PRINT/OUTPUT
+        self.advance()
         print_args = self.collect_arguments()
         print(print_args)
         return f"print({print_args})"
 
     def parse_identifier(self) -> str:
-        """Parses identifiers, function calls, and variable assignments."""
-        identifier = self.advance().value  # Consume the identifier
+        identifier = self.advance().value
 
-        if self.peek().value == "(":  # Function call
+        if self.peek().value == "(":
             args = self.collect_arguments()
             return f"{identifier}({args})"
         elif self.peek().value in ("<-", "="):
-            self.advance()  # Consume the assignment operator
+            self.advance()
             value_expr = self.get_expr()
             return f"{identifier} = {value_expr}"
         elif self.peek().type == 'ATTRIBUTE': 
-            return identifier+self.parse_attribute()
+            return identifier + self.parse_attribute()
         else:
             return identifier
 
     def parse_attribute(self) -> str:
-        """Parses attribute access and method calls on objects."""
-        attribute_chain = self.advance().value  # Consume the first part of the attribute chain
+        attribute_chain = self.advance().value
 
-        while self.peek().type == 'ATTRIBUTE':  # Continue parsing the attribute chain
+        while self.peek().type == 'ATTRIBUTE':
             attribute_chain += self.advance().value
 
-        if self.peek().value == "(":  
+        if self.peek().value == "(":
             args = self.collect_arguments()
             return f"{attribute_chain}({args})"
         else:
             return attribute_chain
 
     def collect_arguments(self) -> str:
-        """Collects and returns function/method arguments as a string."""
         args = []
         paren_count = 1
         self.advance()  # Skip the opening parenthesis
@@ -61,7 +89,7 @@ class Expr:
             elif current_token.value == ')':
                 paren_count -= 1
                 if paren_count == 0:
-                    break  # Don't include the final closing parenthesis
+                    break
 
             args.append(current_token.value)
             self.advance()

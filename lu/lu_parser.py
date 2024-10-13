@@ -1,7 +1,7 @@
-from typing import List, Any, Optional , Tuple
+from typing import List, Optional
 from lu_token import Token
 import ast
-from lu_errors import SyntaxError, Error
+from lu_errors import SyntaxError, NameError, RuntimeError
 from expr import Expr
 
 
@@ -21,53 +21,94 @@ class Parser(Expr):
 
     def peek_relative(self, n: int) -> Token:
         """Returns the relative token to the current token being parsed."""
-        if (k := self.current + n) <= len(self.tokens) - 1:
-            return self.tokens[k]
-        raise SyntaxError(f"List index out of range: {k}")
+        k = self.current + n
+        if k < 0 or k >= len(self.tokens):
+            SyntaxError(f"List index out of range: {k}")
+            return Token(type="EOF", value="", line=self.tokens[-1].line)
+        return self.tokens[k]
 
     def advance(self) -> Token:
-        """Increment/Consumes current token index and return the previous token."""
+        """Increment/Consume current token index and return the previous token."""
         if self.is_at_file_end():
-            return self.peek()
+            return self.peek()  # Do not advance if EOF, return current EOF token
         self.current += 1
+        if self.current >= len(self.tokens):  # Guard to prevent incrementing past end
+            return self.tokens[-1]  # Return the last token (likely EOF) to avoid error
         return self.tokens[self.current - 1]
 
     def is_at_file_end(self, n: int = None) -> bool:
-        """Checks for End Of File"""
+        """Checks for End Of File."""
         return self.peek().type == 'EOF' if n is None else self.peek_relative(n).type == 'EOF'
     
     def is_at_line_end(self, n: int = None) -> bool:
-        """Checks if the current token or the token `n` positions ahead is a newline.
+        """
+        Checks if the current token or the token `n` positions ahead is a newline.
+        Includes support for semicolon as line terminator.
         """
         token = self.peek_relative(n) if n is not None else self.peek()
-        return token.value == '\n'
-    
+
+        # Check if token is a newline or semicolon, but ignore TAB tokens
+        return token.value == '\n' or token.value == ';' or token.type == 'WHITESPACE' and '\n' in token.value
+
 
     def get_expr(self, till_types: Optional[List[str]] = None) -> str:
+        """Gets the next expression from the tokens."""
         if till_types is None:
             till_types = []
 
-        token_type = self.peek().type
-
-        if self.peek().value in ('print', 'PRINT', 'OUTPUT'):
+        # Initialize indentation
+        self.calculate_indentation()
+        current_token = self.peek()
+        
+        if current_token.value in ('print', 'PRINT', 'OUTPUT'):
             return self.parse_print()
-
-        elif token_type == 'IDENTIFIER':
+        elif current_token.value in ('IF', 'ELSE'):
+            return self.parse_conditions()
+        elif current_token.type == 'IDENTIFIER':
             return self.parse_identifier()
-
-        elif token_type == 'ATTRIBUTE' and self.peek_relative(-1).type in ('ATTRIBUTE', 'IDENTIFIER'):
+        elif current_token.type == 'ATTRIBUTE' and self.peek_relative(-1).type in ('ATTRIBUTE', 'IDENTIFIER'):
             return self.parse_attribute()
-
+        elif current_token.value in ('ENDIF'):
+            return ''
         else:
-            SyntaxError(f"Unexpected token: {self.peek().value}")
+            SyntaxError(f"Unexpected token: {current_token.value}, {current_token}")
+
+    def calculate_indentation(self) -> int:
+        """Calculates the current indentation level based on TAB tokens."""
+        token = self.peek()
+        if token.type == 'TAB' and token.column == 1:
+            indent_level = 1
+            while self.peek_relative(1).value == '\t':
+                indent_level += 1
+                self.advance()  # Move past the TAB token
+            self.advance()
+            self.indent = indent_level
 
 def parse(tokens: List[Token]) -> ast.Module:
     """
     Parse tokens using parallel processing for large inputs,
     fall back to single-threaded parsing for small inputs.
     """
-    if len(tokens) > 1000:  # Arbitrary threshold, adjust as needed
-        return parse(tokens) #TODO
+    def process_token_chunk(chunk):
+        parser = Parser(chunk)
+        statements = []
+        while not parser.is_at_file_end():
+            statements.append(parser.parse_statement())
+            if parser.is_at_line_end():
+                parser.advance()
+        return statements
+
+    if len(tokens) > 1000:  # Large input, use parallel processing
+        # Placeholder for multiprocessing logic (commented out for now)
+        # num_chunks = 4  # Number of parallel processes
+        # chunk_size = len(tokens) // num_chunks
+        # chunks = [tokens[i:i+chunk_size] for i in range(0, len(tokens), chunk_size)]
+        #
+        # with Pool(num_chunks) as p:
+        #     parsed_chunks = p.map(process_token_chunk, chunks)
+        # statements = [stmt for chunk in parsed_chunks for stmt in chunk]
+        pass  # Parallel processing not implemented, fallback to single-threaded
+
     else:
         parser = Parser(tokens)
         statements = []
