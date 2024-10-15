@@ -68,11 +68,10 @@ class Parser(Expr):
             return self.parse_identifier()
         elif current_token.type == 'ATTRIBUTE' and self.peek_relative(-1).type in ('ATTRIBUTE', 'IDENTIFIER'):
             return self.parse_attribute()
-        elif current_token.value in ('ENDIF'):
+        elif current_token.value.lower() in ('endif', 'else'):
             return ''
         else:
-            SyntaxError(f"Unexpected token: {current_token.value}, {current_token}")
-
+            raise SyntaxError(f"Unexpected token: {current_token.value}, {current_token}")
     def calculate_indentation(self) -> int:
         """Calculates the current indentation level based on TAB tokens."""
         token = self.peek()
