@@ -83,8 +83,16 @@ class Expr:
 
     def collect_arguments(self) -> str:
         args = []
-        paren_count = 1
-        self.advance()  # Skip the opening parenthesis
+        if self.peek().value == '(':
+            paren_count = 1
+            self.advance()  # Skip the opening parenthesis
+        elif self.peek_relative(-1):
+            while not (self.is_at_line_end() or self.is_at_file_end()):
+                paren_count = 0
+                args.append(self.advance().value)
+            else:
+                args.append("\n")
+                
 
         while paren_count > 0:
             if self.is_at_file_end():
