@@ -57,9 +57,8 @@ class Parser(Expr):
             till_types = []
 
         # Initialize indentation
-        self.calculate_indentation()
+        # self.calculate_indentation()
         current_token = self.peek()
-        
         if current_token.value in ('print', 'PRINT', 'OUTPUT'):
             return self.parse_print()
         elif current_token.value in ('IF', 'ELSE'):
@@ -68,20 +67,22 @@ class Parser(Expr):
             return self.parse_identifier()
         elif current_token.type == 'ATTRIBUTE' and self.peek_relative(-1).type in ('ATTRIBUTE', 'IDENTIFIER'):
             return self.parse_attribute()
-        elif current_token.value.lower() in ('endif', 'else'):
+        elif current_token.value.lower() in ('endif', 'else','\t'):
             return ''
         else:
             raise SyntaxError(f"Unexpected token: {current_token.value}, {current_token}")
-    def calculate_indentation(self) -> int:
-        """Calculates the current indentation level based on TAB tokens."""
-        token = self.peek()
-        if token.type == 'TAB' and token.column == 1:
-            indent_level = 1
-            while self.peek_relative(1).value == '\t':
-                indent_level += 1
-                self.advance()  # Move past the TAB token
-            self.advance()
-            self.indent = indent_level
+    
+    
+    # def calculate_indentation(self) -> int:
+    #     """Calculates the current indentation level based on TAB tokens."""
+    #     token = self.peek()
+    #     if token.type == 'TAB' and token.column == 1:
+    #         indent_level = 1
+    #         while self.peek_relative(1).value == '\t':
+    #             indent_level += 1
+    #             self.advance()  # Move past the TAB token
+    #         self.advance()
+    #         self.indent = indent_level
 
 def parse(tokens: List[Token]) -> ast.Module:
     """

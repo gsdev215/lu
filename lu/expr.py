@@ -3,30 +3,31 @@ from lu_errors import SyntaxError
 
 class Expr:
     def parse_conditions(self) -> str:
-        x = self.advance().value.lower()  # Consume IF or ELSE
-        indent_level = self.indent
-        args = ''
-        
-        if x == 'if':
-            args = ('    ' * self.indent) + x + ' '
-            condition = []
+        condition = self.advance().value.lower()
+        if condition in ('if','else','elif','else if'):
+            return self.parse_if_else(condition)
 
+    def parse_if_else(self,keyword):
+        indent_ = self.indent
+        if keyword in ('if','elif','else if'):
+            head=('    ' * self.indent) + keyword +' '
+            condition = []
             while not self.is_at_line_end():
                 condition.append(self.advance().value)
-            
-            args += ''.join(condition) + ':\n'
-            self.advance()  # Move to the next line after the condition
-        elif x == 'else':
-            args = ('    ' * self.indent) + x + ':\n'
+            head+= ''.join(condition) + ':\n'
+            self.advance() # next line
+        elif keyword == 'else':
+            head= ('    ' * self.indent) + keyword + ':\n'
             self.advance()  # Move to the next line after ELSE
         else:
-            raise SyntaxError(f"Expected 'IF' or 'ELSE', but got '{x}'")
-
-        block = []
+            raise SyntaxError(f"Expected 'IF' or 'ELSE', but got '{keyword}'")
+        
+        body = []
         self.indent += 1
+
         while not self.is_at_file_end():
             if self.peek().value.lower() == 'endif':
-                self.advance()  # Consume ENDIF
+                self.advance() # consume endif
                 break
 
             expr = self.get_expr()
@@ -34,20 +35,24 @@ class Expr:
                 raise SyntaxError("Unexpected token or empty expression in the block.")
             elif expr == '':
                 continue
-
-            block.append(('    ' * self.indent) + expr + '\n')
-            self.calculate_indentation()
+            
+            if expr.startswith('    ' * self.indent):
+                body.append(expr + '\n')
+            else:
+                body.append(('    ' * self.indent) + expr + '\n')
             
             if self.is_at_line_end():
                 self.advance()
 
             if self.peek().value.lower() == 'else':
                 self.indent -= 1
-                block.append(self.parse_conditions())
+                self.advance()
+                body.append(self.parse_if_else('else'))
                 break
 
-        self.indent = indent_level  # Reset indent to original level
-        return args + ''.join(block)
+        self.indent = indent_  # Reset indent to original level
+        return head + ''.join(body)
+
 
     def parse_print(self) -> str:
         self.advance()
@@ -62,7 +67,11 @@ class Expr:
             return f"{identifier}({args})"
         elif self.peek().value in ("<-", "="):
             self.advance()
-            value_expr = self.get_expr()
+            value_expr = []
+            while not self.is_at_line_end():
+                value_expr.append(self.advance().value)
+            value_expr =  ''.join(value_expr)
+
             return f"{identifier} = {value_expr}"
         elif self.peek().type == 'ATTRIBUTE': 
             return identifier + self.parse_attribute()
@@ -83,10 +92,10 @@ class Expr:
 
     def collect_arguments(self) -> str:
         args = []
-        if self.peek().value == '(':
+        if self.peek_relative(-1).value == '(':
             paren_count = 1
             self.advance()  # Skip the opening parenthesis
-        elif self.peek_relative(-1):
+        else:
             while not (self.is_at_line_end() or self.is_at_file_end()):
                 paren_count = 0
                 args.append(self.advance().value)

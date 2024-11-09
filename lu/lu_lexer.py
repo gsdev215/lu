@@ -9,10 +9,10 @@ class Lexer:
         self.column = 1
         self.token_specs = [
             # Whitespace and Comments
-            ('TAB', r'\t+'),                # Matches individual tabs
+            # ('TAB', r'\t+'),                 # Matches individual tabs
             ('WHITESPACE', r'\n+'),            # Matches individual newlines  # Matches tabs and newlines
-            ('SPACE', r'[ ]+'),          # Matches spaces
-            ('COMMENT', r'//.*'),        # Single-line comments starting with //
+            ('SPACE', r'[ ]+'),                # Matches spaces
+            ('COMMENT', r'//.*'),              # Single-line comments starting with //
 
             # Boolean and Logical Operators
             ('BOOLEAN', r'\b(TRUE|FALSE)\b'),                   # Boolean literals TRUE, FALSE
@@ -34,7 +34,7 @@ class Lexer:
             ('REAL', r'\b\d+\.\d+\b'),         # Real (floating point) numbers
 
             # Operators (Arithmetic, Assignment, Comparison, and Bitwise)
-            ('OPERATOR', r'(<-|←|->|==|\+|-|\*{1,2}|/|\^|=|<>|<|<=|>|>=|%|&|\||\^|~|<<|>>)'),  # All operators
+            ('OPERATOR', r'(<-|←|->|==|!=|\+|-|\*{1,2}|/|\^|=|<>|<|<=|>|>=|%|&|\||\^|~|<<|>>)'),  # All operators
 
             # Delimiters
             ('DELIMITER', r'[\(\)\[\]\{\},;:]'),        # Parentheses, brackets, commas, etc.
