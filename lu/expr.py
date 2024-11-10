@@ -12,8 +12,11 @@ class Expr:
         if keyword in ('if','elif','else if'):
             head=('    ' * self.indent) + keyword +' '
             condition = []
-            while not self.is_at_line_end():
+            while self.peek().value.lower() != "then":
+                if self.is_at_line_end():
+                    SyntaxError("expected 'THEN' at line end",expected="then")
                 condition.append(self.advance().value)
+            self.advance() # consume 'THEN'
             head+= ''.join(condition) + ':\n'
             self.advance() # next line
         elif keyword == 'else':

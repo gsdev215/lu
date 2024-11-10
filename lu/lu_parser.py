@@ -3,9 +3,9 @@ from lu_token import Token
 import ast
 from lu_errors import SyntaxError, NameError, RuntimeError
 from expr import Expr
+from TYPE import keyword_type
 
-
-class Parser(Expr):
+class Parser(Expr,keyword_type):
     def __init__(self, tokens: List[Token]) -> None:
         self.tokens = tokens
         self.current = 0
@@ -63,6 +63,8 @@ class Parser(Expr):
             return self.parse_print()
         elif current_token.value in ('IF', 'ELSE'):
             return self.parse_conditions()
+        elif current_token.value == 'TYPE':
+            return self.parse_type()
         elif current_token.type == 'IDENTIFIER':
             return self.parse_identifier()
         elif current_token.type == 'ATTRIBUTE' and self.peek_relative(-1).type in ('ATTRIBUTE', 'IDENTIFIER'):
