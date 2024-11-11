@@ -4,9 +4,12 @@ import ast
 from lu_errors import SyntaxError, NameError, RuntimeError
 from expr import Expr
 from TYPE import keyword_type
+from elements import elements
 
-class Parser(Expr,keyword_type):
+class Parser(Expr,keyword_type,elements):
     def __init__(self, tokens: List[Token]) -> None:
+        self.imports = []
+        self.datatypes = ["INTEGER", "CHAR", "STRING", "DATE", "REAL","BOOLEAN"]
         self.tokens = tokens
         self.current = 0
         self.indent = 0
@@ -65,6 +68,8 @@ class Parser(Expr,keyword_type):
             return self.parse_conditions()
         elif current_token.value == 'TYPE':
             return self.parse_type()
+        elif current_token.value == "DECLARE":
+            return self.parse_declare()
         elif current_token.type == 'IDENTIFIER':
             return self.parse_identifier()
         elif current_token.type == 'ATTRIBUTE' and self.peek_relative(-1).type in ('ATTRIBUTE', 'IDENTIFIER'):
@@ -118,4 +123,8 @@ def parse(tokens: List[Token]) -> ast.Module:
             statements.append(parser.parse_statement())
             if parser.is_at_line_end():
                 parser.advance()
+        imports = []
+        for i in parser.imports:
+            imports.append(ast.parse(i).body)
+        statements = imports + statements
         return ast.Module(body=statements, type_ignores=[])
