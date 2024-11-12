@@ -15,7 +15,7 @@ def process_file(input_filename: str, output_filename: str, run: bool = False):
         info(f"Processing file: {input_filename}")
         tokens = tokenize_text(text)
         parsed_ast = parse(tokens)
-        py_output = astunparse.unparse(parsed_ast)
+        py_output = astunparse.unparse(parsed_ast).replace("'#NEWLINE#'","")
         
         with open(output_filename, 'w', encoding='utf-8') as outfile:
             outfile.write(py_output)
