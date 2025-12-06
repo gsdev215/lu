@@ -1,7 +1,0 @@
-print "hello World"
-print "hi contributers"
-
-dev <- 20+2*70
-// test is decleared below
-
-print sum(1,2)
